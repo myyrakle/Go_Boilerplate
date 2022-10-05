@@ -32,3 +32,31 @@ func MakeKey() (string, string, error) {
 
 	return publicKeyHex, privateKeyHex, nil
 }
+
+func MakeAddress() (string, error) {
+	privateKey, err := ethCrypto.GenerateKey()
+	if err != nil {
+		return "", err
+	}
+
+	publicKey := privateKey.Public()
+
+	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
+	if !ok {
+		log.Fatal("cannot assert type: publicKey is not of type *ecdsa.PublicKey")
+	}
+
+	publicKeyBytes := ethCrypto.FromECDSAPub(publicKeyECDSA)
+	privateKeyBytes := ethCrypto.FromECDSA(privateKey)
+
+	publicKeyHex := hexutil.Encode(publicKeyBytes)[4:]   // 0x와 04 제거
+	privateKeyHex := hexutil.Encode(privateKeyBytes)[2:] // 0x 제거
+
+	fmt.Printf("공개키: %s, 개인키: %s\n", publicKeyHex, privateKeyHex)
+
+	address := crypto.PubkeyToAddress(*publicKeyECDSA).Hex()
+
+	fmt.Printf("주소: %s\n", address)
+
+	return address, nil
+}
